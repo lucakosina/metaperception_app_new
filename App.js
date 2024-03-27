@@ -8,11 +8,11 @@ import DrawFix from "./Components/DrawFix";
 import * as DrawDots from "./Components/DrawDots";
 import DrawBox from "./Components/DrawBox";
 import * as DrawChoice from "./Components/DrawChoice";
-// import DrawBlame from "./Components/DrawBlame";
 import style from "./Components/style/perTaskStyle.module.css";
 import * as utils from "./Components/utils.js";
 import * as staircase from "./Components/PerStaircase.js";
 import * as ConfSlider from "./Components/DrawConfSlider.js";
+import * as BlameSlider from "./Components/DrawBlameSlider.js";
 import * as ConfSliderGlobal from "./Components/DrawConfSliderGlobal.js";
 
 import { DATABASE_URL } from "./Components/config";
@@ -93,11 +93,51 @@ class App extends React.Component {
       .concat(Array(Math.round(trialNumTotal / 2)).fill(2));
     utils.shuffle(stimPos);
 
-    var PlayerProbs = [[0.2, 0.6, 0.8], [0.2, 0.8, 0.6], [0.6, 0.2, 0.8], [0.6, 0.8, 0.2], [0.8, 0.6, 0.2],[0.8, 0.2, 0.6]]; 
+    var lowProb = 0.2;
+    var mediumProb = 0.5;
+    var highProb = 0.8;
+
+    var PlayerProbs = [[lowProb, mediumProb, highProb], [lowProb, highProb, mediumProb], [mediumProb, lowProb, highProb], [mediumProb, highProb, lowProb], [highProb, mediumProb, lowProb],[highProb, lowProb, mediumProb]]; 
 
     var PlayerProbsOrder = PlayerProbs[Math.floor(Math.random() * 7)];
 
 
+      
+    const results1 = [];
+    const results2 = [];
+    const results3 = [];
+
+
+    for (let i = 0; i < trialNumPerBlock; i++) {
+        
+        const randomValue = Math.random();
+
+        if (randomValue < PlayerProbsOrder[0]) {
+            results1.push(1);
+        } else {
+            results1.push(0);
+        }
+    }
+    for (let i = 0; i < trialNumPerBlock; i++) {
+        
+      const randomValue = Math.random();
+
+      if (randomValue < PlayerProbsOrder[1]) {
+          results2.push(1);
+      } else {
+          results2.push(0);
+      }
+  }
+  for (let i = 0; i < trialNumPerBlock; i++) {
+        
+    const randomValue = Math.random();
+
+    if (randomValue < PlayerProbsOrder[2]) {
+        results3.push(1);
+    } else {
+        results3.push(0);
+    }
+}
     
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +155,7 @@ class App extends React.Component {
       // trial timings in ms
       fixTimeLag: 1000, //1000
       stimTimeLag: 300, //300
-      respFbTimeLag: 3000,
+      respFbTimeLag: 700,
 
       //trial parameters
       trialNumTotal: trialNumTotal,
@@ -153,6 +193,8 @@ class App extends React.Component {
       correctPer: 0,
 
       PlayerProbsOrder: PlayerProbsOrder,
+
+      pointCounter: 0,
 
       //dot paramters
       dotRadius: 5,
@@ -281,7 +323,7 @@ class App extends React.Component {
         }.bind(this),
         10
       );
-    } else if (whichButton === 3 && curInstructNum === 5) {
+    } else if (whichButton === 3 && curInstructNum === 6) {
       this.setState({
         quizState: "post",
       });
@@ -292,7 +334,7 @@ class App extends React.Component {
         }.bind(this),
         10
       );
-    } else if (whichButton === 3 && curInstructNum === 6) {
+    } else if (whichButton === 3 && curInstructNum === 7) {
       setTimeout(
         function () {
           this.redirectToNextTask();
@@ -366,34 +408,23 @@ class App extends React.Component {
 
 
 
-    var PlayerSuccess = this.state.PlayerProbsOrder[this.state.blockNum-1];
-      
-    console.log(this.state.PlayerProbsOrder);
 
-    console.log(PlayerSuccess);
-
-    const results = [];
-
-
-    for (let i = 0; i < this.state.trialNumPerBlock; i++) {
-        
-        const randomValue = Math.random();
-
-        if (randomValue < PlayerSuccess) {
-            results.push(1);
-        } else {
-            results.push(0);
-        }
-    }
-
-    console.log(results);
-
+  var results;
+  if (this.state.blockNum === 1) {
+    results = this.state.results1;
+  } else if (this.state.blockNum === 2) {
+    results = this.state.results2;
+  } else if (this.state.blockNum === 3) {
+    results = this.state.results3;
+  }
 
     var blame; 
     if (correct === 1 && results[this.state.trialNumInBlock-1] === 1) {
       blame = 1;
+      this.state.pointCounter += 1;
     } else if (correct === 0 && results[this.state.trialNumInBlock-1] === 0) {
       blame = 2; 
+      this.state.pointCounter -= 1;
     } else if ((correct === 0 && results[this.state.trialNumInBlock-1] === 1) || (correct === 1 && results[this.state.trialNumInBlock-1] === 0)) {
       blame = 3;
     };
@@ -653,7 +684,7 @@ class App extends React.Component {
           <center>
             Use the ← and → keys to navigate the pages.
             <br />
-            <br />[<strong>→</strong>]
+            <br />[<strong>←</strong>][<strong>→</strong>]
           </center>
         </span>
       </div>
@@ -662,19 +693,17 @@ class App extends React.Component {
     let instruct_text3 = (
       <div>
         <span>
-          While you choose we match your results with another players. 
-          
-          <br /> <br /> 
-          Only if both of you choose the right card you will win the round and the battery will be charged. 
-          <br /> <br />
-          If only one of you chooses the right card the battery will not be charged. 
-          Also, if none chooses the right card, you both receive no points.
-          <br /> <br />
-          After every round you will receive feedback if both of you got it right/wrong or if one of you chose the wrong card.
-          You will not find out who has chosen wrongly but instead will have to rate your opinion who is to blame. 
-          <br /> <br />
-          If you do well in the task, you can receive up to{" "}
-          <strong>£2 bonus</strong>!
+        Also, remember that we will be pairing your performance with Player Z. After you rate your confidence, you will be shown the following feedback:
+        <br/> 
+        <strong>Whether you’re both correct (+1)</strong>
+        <br/> 
+        <strong>Whether you’re both wrong (-1)</strong>
+        <br/> 
+        <strong>Whether only one person got it wrong (0)</strong>
+        <br/> 
+        If only one person got it wrong, you will have to rate the probability that you or Player Z got it wrong. 
+        Please do your best to select your rating accurately and do take advantage of the whole length of the rating scale.
+        You will not be allowed to move on to the next set of batteries if you do not adjust the rating scale.
           <br /> <br />
           <center>
             When you are ready, please press the [<strong>SPACEBAR</strong>] to
@@ -687,8 +716,33 @@ class App extends React.Component {
       </div>
     )
 
-
     let instruct_text4 = (
+      <div>
+        <span>
+          You have completed {this.state.blockNum} out of{" "}
+          {this.state.blockNumTotal} blocks!
+          <br />
+          <br />
+          You will now be taken to a page where you can take a break. But first answer the following question:
+          <br/>
+          After going through the previous {this.state.trialNumInBlock} pairs of battery cards how often do you think you chose correctly compared to Player Z?<br />
+          <br />
+          <BlameSlider.BlameSlider
+          callBackValue={this.handleCallbackBlame.bind(this)} //callBackValue={this.handleCallbackBlame.bind(this)}
+          initialValue={this.state.blameInitial} //                  initialValue={this.state.blameInitial}
+        />
+          <br />
+          <br />
+          <center>
+            Press the [<strong>SPACEBAR</strong>] when you are ready to
+            continue. You will not allowed to move on unless you have adjusted the scale.
+          </center>
+        </span>
+      </div>
+    );
+
+
+    let instruct_text5 = (
       <div>
         <span>
           You have completed {this.state.blockNum} out of{" "}
@@ -706,13 +760,21 @@ class App extends React.Component {
       </div>
     );
 
-    let instruct_text5 = (
+    let instruct_text6 = (
       <div>
         <span>
           Amazing!
           <br />
           <br />
           You have completed sorting through all of the battery cards!
+          <br />
+          <br />
+          After going through the previous {this.state.trialNumInBlock} pairs of battery cards how often do you think you chose correctly compared to Player Z?
+          <br />
+          <BlameSlider.BlameSlider
+          callBackValue={this.handleCallbackBlame.bind(this)} //callBackValue={this.handleCallbackBlame.bind(this)}
+          initialValue={this.state.blameInitial} //                  initialValue={this.state.blameInitial}
+        />
           <br />
           <br />
           <center>
@@ -722,7 +784,7 @@ class App extends React.Component {
       </div>
     );
 
-    let instruct_text6 = (
+    let instruct_text7 = (
       <div>
         <span>
           Whew! Our spaceship power is now back to a good level, thanks to the
@@ -749,6 +811,8 @@ class App extends React.Component {
         return <div>{instruct_text5}</div>;
       case 6:
         return <div>{instruct_text6}</div>;
+      case 7:
+        return <div>{instruct_text7}</div>;
       default:
     }
   }
@@ -871,7 +935,7 @@ class App extends React.Component {
       instructScreen: true,
       taskScreen: false,
       quizScreen: false,
-      instructNum: 5,
+      instructNum: 6, //5
       taskSection: null,
     });
   }
@@ -1243,7 +1307,7 @@ class App extends React.Component {
         instructScreen: true,
         taskScreen: false,
         quizScreen: false,
-        instructNum: 5, //4
+        instructNum: 6, //4
         taskSection: null,
       });
     }
@@ -1416,7 +1480,10 @@ class App extends React.Component {
           this.state.blameLevel = 200;
           text = (<div>
             <center>
-                You both got it right and the card will charge the battery. 
+            You both made the correct choice. 
+            <br/>
+            <br/>
+            Your current point number is {this.state.pointCounter}.
               </center>
               <br />
               <br />
@@ -1433,8 +1500,11 @@ class App extends React.Component {
           this.state.blameLevel = 200;
           text = (<div>
             <center>
-                You both got it wrong and the card will NOT charge the battery. 
-              </center>
+            You both made the wrong choice. 
+            <br/>
+            <br/>
+            Your current point number is {this.state.pointCounter}.
+            </center>
               <br />
               <br />
               <br />
@@ -1450,16 +1520,21 @@ class App extends React.Component {
           text = (
             <div>
               <center>
-              One of you has chosen the wrong card. 
-              Rate how likely it is that you or the other player got it wrong. 
-              If you think your choice was correct and the other player was wrong move the slider to the right. 
-              If you think your choice was wrong and the other player was right move the slider to the left. 
+              One of you has chosen the wrong battery card. 
+              <br/>
+            <br/>
+            Your current point number is {this.state.pointCounter}.
+            <br/>
+            <br/>
+              Rate how likely it is that you or Player Z chose wrongly.  
+              <br />
+              <br />
               </center>
               <br />
               <br />
               <br />
               <center>
-                <ConfSlider.ConfSlider
+                <BlameSlider.BlameSlider
                   callBackValue={this.handleCallbackBlame.bind(this)} //callBackValue={this.handleCallbackBlame.bind(this)}
                   initialValue={this.state.blameInitial} //                  initialValue={this.state.blameInitial}
                 />
