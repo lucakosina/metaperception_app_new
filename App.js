@@ -102,42 +102,8 @@ class App extends React.Component {
     var PlayerProbsOrder = PlayerProbs[Math.floor(Math.random() * 7)];
 
 
-      
-    const results1 = [];
-    const results2 = [];
-    const results3 = [];
 
 
-    for (let i = 0; i < trialNumPerBlock; i++) {
-        
-        const randomValue = Math.random();
-
-        if (randomValue < PlayerProbsOrder[0]) {
-            results1.push(1);
-        } else {
-            results1.push(0);
-        }
-    }
-    for (let i = 0; i < trialNumPerBlock; i++) {
-        
-      const randomValue = Math.random();
-
-      if (randomValue < PlayerProbsOrder[1]) {
-          results2.push(1);
-      } else {
-          results2.push(0);
-      }
-  }
-  for (let i = 0; i < trialNumPerBlock; i++) {
-        
-    const randomValue = Math.random();
-
-    if (randomValue < PlayerProbsOrder[2]) {
-        results3.push(1);
-    } else {
-        results3.push(0);
-    }
-}
     
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,6 +159,10 @@ class App extends React.Component {
       correctPer: 0,
 
       PlayerProbsOrder: PlayerProbsOrder,
+
+      results1: [],
+      results2:[],
+      results3: [],
 
       pointCounter: 0,
 
@@ -294,8 +264,48 @@ class App extends React.Component {
   handleBegin(keyPressed) {
     var curInstructNum = this.state.instructNum;
     var whichButton = keyPressed;
+
     if (whichButton === 3 && curInstructNum === 3) {
+      const results1 = [];
+      const results2 = [];
+      const results3 = [];
+
+
+    for (let i = 0; i < this.state.trialNumPerBlock; i++) {
+        
+        const randomValue = Math.random();
+
+        if (randomValue < this.state.PlayerProbsOrder[0]) {
+            results1.push(1);
+        } else {
+            results1.push(0);
+        }
+    }
+    for (let i = 0; i < this.state.trialNumPerBlock; i++) {
+        
+      const randomValue = Math.random();
+
+      if (randomValue < this.state.PlayerProbsOrder[1]) {
+          results2.push(1);
+      } else {
+          results2.push(0);
+      }
+  }
+  for (let i = 0; i < this.state.trialNumPerBlock; i++) {
+        
+    const randomValue = Math.random();
+
+    if (randomValue < this.state.PlayerProbsOrder[2]) {
+        results3.push(1);
+    } else {
+        results3.push(0);
+    }
+}
+
       this.setState({
+        results1: results1,
+        results2: results2,
+        results3: results3,
         quizState: "pre",
       });
 
@@ -417,6 +427,10 @@ class App extends React.Component {
   } else if (this.state.blockNum === 3) {
     results = this.state.results3;
   }
+  console.log(this.state.results1);
+  console.log(this.state.results2);
+  console.log(this.state.results3);
+  console.log(results);
 
     var blame; 
     if (correct === 1 && results[this.state.trialNumInBlock-1] === 1) {
@@ -727,10 +741,12 @@ class App extends React.Component {
           <br/>
           After going through the previous {this.state.trialNumInBlock} pairs of battery cards how often do you think you chose correctly compared to Player Z?<br />
           <br />
+          <center>
           <BlameSlider.BlameSlider
           callBackValue={this.handleCallbackBlame.bind(this)} //callBackValue={this.handleCallbackBlame.bind(this)}
           initialValue={this.state.blameInitial} //                  initialValue={this.state.blameInitial}
         />
+        </center>
           <br />
           <br />
           <center>
@@ -771,10 +787,13 @@ class App extends React.Component {
           <br />
           After going through the previous {this.state.trialNumInBlock} pairs of battery cards how often do you think you chose correctly compared to Player Z?
           <br />
+          <br />
+          <center>
           <BlameSlider.BlameSlider
           callBackValue={this.handleCallbackBlame.bind(this)} //callBackValue={this.handleCallbackBlame.bind(this)}
           initialValue={this.state.blameInitial} //                  initialValue={this.state.blameInitial}
         />
+        </center>
           <br />
           <br />
           <center>
@@ -1481,6 +1500,8 @@ class App extends React.Component {
           text = (<div>
             <center>
             You both made the correct choice. 
+            <br />
+            + 1 Point
             <br/>
             <br/>
             Your current point number is {this.state.pointCounter}.
@@ -1501,6 +1522,8 @@ class App extends React.Component {
           text = (<div>
             <center>
             You both made the wrong choice. 
+            <br />
+            - 1 Point
             <br/>
             <br/>
             Your current point number is {this.state.pointCounter}.
@@ -1541,6 +1564,10 @@ class App extends React.Component {
               </center>
               <br />
               <br />
+              <center>
+                When you are ready, please press the [<strong>SPACEBAR</strong>] to continue.
+            <br />
+          </center>
             </div>
           );         
 
